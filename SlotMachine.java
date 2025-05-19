@@ -1,3 +1,7 @@
+import java.util.Random;
+import java.util.Scanner;
+
+
 public class SlotMachine {
 
     private static final String[] SYMBOLS = {"🍒", "🍋", "🔔", "💎", "7️⃣", "⭐"};
