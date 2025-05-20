@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class SlotMachine {
 
     private static final String[] SYMBOLS = {"🍒", "🍋", "🔔", "💎", "7️⃣", "⭐"};
-    private static final double WIN_PROBABILITY = 0.01;
+    private static final double WIN_PROBABILITY = 0.10;
     private static final Random random = new Random();
 
     // Spins the slot machine and returns an array of three symbols
