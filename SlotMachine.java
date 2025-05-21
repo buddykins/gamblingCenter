@@ -1,50 +1,77 @@
-import java.util.Random;
 import java.util.Scanner;
-
+import java.util.Random;
 
 public class SlotMachine {
-
-    private static final String[] SYMBOLS = {"🍒", "🍋", "🔔", "💎", "7️⃣", "⭐"};
-    private static final double WIN_PROBABILITY = 0.10;
+    private String playerName;
+    private double startingMoney;
+    private double currentMoney;
+    private static final String[] EMOJIS = {"🍒", "🍋", "🔔", "💎", "7️⃣", "🍀"};
     private static final Random random = new Random();
+    private static final Scanner scanner = new Scanner(System.in);
 
-    // Spins the slot machine and returns an array of three symbols
-    public static String[] spin() {
-        String[] result = new String[3];
-        for (int i = 0; i < 3; i++) {
-            result[i] = SYMBOLS[random.nextInt(SYMBOLS.length)];
-        }
-        return result;
+    public SlotMachine() {
+        System.out.print("Enter your name: ");
+        this.playerName = scanner.nextLine();
+        System.out.print("Enter your starting amount of money: $");
+        this.startingMoney = scanner.nextDouble();
+        this.currentMoney = this.startingMoney;
     }
 
-    // Determines if the user wins (1% chance)
-    public static boolean isWin() {
-        return random.nextDouble() < WIN_PROBABILITY;
-    }
+    public void play() throws InterruptedException {
+        System.out.println("Welcome, " + playerName + "! Let's play the slot machine!");
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("\n💰🎰  Welcome to the Java Slot Machine!  🎰💰");
-        System.out.println("Press <Enter> to spin or type 'q' to quit. Each spin has a 1% chance to win.\n");
+        while (currentMoney > 0) {
+            System.out.print("You have $" + String.format("%.2f", currentMoney) + ". Enter your bet (or 0 to quit): $");
+            double bet = scanner.nextDouble();
 
-        while (true) {
-            System.out.print("Push the button and spin! → ");
-            String input = scanner.nextLine();
-            if (input.equalsIgnoreCase("q")) {
-                System.out.println("Thanks for playing. See you next time!");
+            if (bet == 0) {
                 break;
             }
 
-            String[] combo = spin();
-            System.out.println(String.join(" | ", combo));
+            if (bet > currentMoney || bet < 0) {
+                System.out.println("Invalid bet. Please enter a valid amount.");
+                continue;
+            }
 
-            if (isWin()) {
-                System.out.println("\n🎉  JACKPOT! You win!  🎉\n");
+            System.out.println("Spinning...");
+            String[] result = new String[3];
+
+            for (int i = 0; i < 3; i++) {
+                Thread.sleep(700); // delay to simulate spinning
+                result[i] = EMOJIS[random.nextInt(EMOJIS.length)];
+                System.out.print(result[i] + " ");
+            }
+
+            System.out.println();
+
+            boolean isWin = isWinningCombo(result);
+            if (isWin && random.nextDouble() < 0.05) {
+                double winnings = bet * 10;
+                currentMoney += winnings;
+                System.out.println("🎉 JACKPOT! You won $" + String.format("%.2f", winnings) + "!");
             } else {
-                System.out.println("No luck this time—try again!\n");
+                currentMoney -= bet;
+                System.out.println("😢 You lost $" + String.format("%.2f", bet));
+            }
+
+            if (currentMoney <= 0) {
+                System.out.println("You're out of money! Game over.");
+                break;
             }
         }
 
-        scanner.close();
+        double netEarnings = currentMoney - startingMoney;
+        System.out.println("\nThank you for playing, " + playerName + "!");
+        System.out.println("Your final balance is $" + String.format("%.2f", currentMoney));
+        System.out.println("Net earnings: $" + String.format("%.2f", netEarnings));
+    }
+
+    private boolean isWinningCombo(String[] result) {
+        return result[0].equals(result[1]) && result[1].equals(result[2]);
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        SlotMachine machine = new SlotMachine();
+        machine.play();
     }
 }
