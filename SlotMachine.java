@@ -12,40 +12,51 @@ public class SlotMachine {
     public SlotMachine() {
         System.out.print("Enter your name: ");
         this.playerName = scanner.nextLine();
-        System.out.print("Enter your starting amount of money: $");
-        this.startingMoney = scanner.nextDouble();
-        this.currentMoney = this.startingMoney;
+
+        while (true) {
+            try {
+                System.out.print("Enter your starting amount of money: $");
+                this.startingMoney = Double.parseDouble(scanner.nextLine());
+                if (startingMoney <= 0) {
+                    System.out.println("Amount must be greater than zero.");
+                    continue;
+                }
+                this.currentMoney = this.startingMoney;
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+            }
+        }
     }
 
-    public void play() throws InterruptedException {
+    public void play() {
         System.out.println("Welcome, " + playerName + "! Let's play the slot machine!");
 
         while (currentMoney > 0) {
-            System.out.print("You have $" + String.format("%.2f", currentMoney) + ". Enter your bet (or 0 to quit): $");
-            double bet = scanner.nextDouble();
-
+            double bet = getValidBet();
             if (bet == 0) {
                 break;
-            }
-
-            if (bet > currentMoney || bet < 0) {
-                System.out.println("Invalid bet. Please enter a valid amount.");
-                continue;
             }
 
             System.out.println("Spinning...");
             String[] result = new String[3];
 
             for (int i = 0; i < 3; i++) {
-                Thread.sleep(700); // delay to simulate spinning
+                try {
+                    Thread.sleep(700); // simulate spinning delay
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt(); // reset interrupted status
+                    System.out.println("Unexpected interruption. Exiting game.");
+                    return;
+                }
+
                 result[i] = EMOJIS[random.nextInt(EMOJIS.length)];
                 System.out.print(result[i] + " ");
             }
-
             System.out.println();
 
-            boolean isWin = isWinningCombo(result);
-            if (isWin && random.nextDouble() < 0.05) {
+            boolean isWin = isWinningCombo(result) && random.nextDouble() < 0.05;
+            if (isWin) {
                 double winnings = bet * 10;
                 currentMoney += winnings;
                 System.out.println("🎉 JACKPOT! You won $" + String.format("%.2f", winnings) + "!");
@@ -66,11 +77,32 @@ public class SlotMachine {
         System.out.println("Net earnings: $" + String.format("%.2f", netEarnings));
     }
 
+    private double getValidBet() {
+        while (true) {
+            try {
+                System.out.print("You have $" + String.format("%.2f", currentMoney) + ". Enter your bet (or 0 to quit): $");
+                double bet = Double.parseDouble(scanner.nextLine());
+
+                if (bet == 0) {
+                    return 0;
+                }
+
+                if (bet > currentMoney || bet < 0) {
+                    System.out.println("Invalid bet. Must be between $0 and $" + String.format("%.2f", currentMoney));
+                } else {
+                    return bet;
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric value.");
+            }
+        }
+    }
+
     private boolean isWinningCombo(String[] result) {
         return result[0].equals(result[1]) && result[1].equals(result[2]);
     }
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
         SlotMachine machine = new SlotMachine();
         machine.play();
     }
