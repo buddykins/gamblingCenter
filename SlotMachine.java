@@ -1,109 +1,96 @@
-import java.util.Scanner;
 import java.util.Random;
+import java.util.Scanner;
 
 public class SlotMachine {
     private String playerName;
-    private double startingMoney;
-    private double currentMoney;
-    private static final String[] EMOJIS = {"🍒", "🍋", "🔔", "💎", "7️⃣", "🍀"};
-    private static final Random random = new Random();
-    private static final Scanner scanner = new Scanner(System.in);
+    private double balance;
+    private double startingBalance;
+    private final String[] emojis = {"🍒", "🍋", "🍉", "⭐", "🔔", "💎"};
+    private final Random rand = new Random();
+    private final Scanner scanner = new Scanner(System.in);
 
     public SlotMachine() {
         System.out.print("Enter your name: ");
-        this.playerName = scanner.nextLine();
-
-        while (true) {
-            try {
-                System.out.print("Enter your starting amount of money: $");
-                this.startingMoney = Double.parseDouble(scanner.nextLine());
-                if (startingMoney <= 0) {
-                    System.out.println("Amount must be greater than zero.");
-                    continue;
-                }
-                this.currentMoney = this.startingMoney;
-                break;
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a valid number.");
-            }
-        }
+        playerName = scanner.nextLine();
+        System.out.print("Hello " + playerName + "! Enter your starting money: $");
+        balance = scanner.nextDouble();
+        startingBalance = balance;
+        System.out.println("Let's play!");
+        startGame();
     }
 
-    public void play() {
-        System.out.println("Welcome, " + playerName + "! Let's play the slot machine!");
+    private void startGame() {
+        while (balance > 0) {
+            System.out.printf("You have $%.2f. How much do you want to bet? $", balance);
+            double bet = scanner.nextDouble();
 
-        while (currentMoney > 0) {
-            double bet = getValidBet();
-            if (bet == 0) {
-                break;
+            if (bet <= 0 || bet > balance) {
+                System.out.println("Invalid bet. Try again.");
+                continue;
             }
 
             System.out.println("Spinning...");
-            String[] result = new String[3];
+            String[] spinResult = spinReels();
 
-            for (int i = 0; i < 3; i++) {
-                try {
-                    Thread.sleep(700); // simulate spinning delay
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt(); // reset interrupted status
-                    System.out.println("Unexpected interruption. Exiting game.");
-                    return;
-                }
-
-                result[i] = EMOJIS[random.nextInt(EMOJIS.length)];
-                System.out.print(result[i] + " ");
+            System.out.println("\nResult:");
+            for (String emoji : spinResult) {
+                System.out.print(emoji + " ");
             }
             System.out.println();
 
-            boolean isWin = isWinningCombo(result) && random.nextDouble() < 0.05;
-            if (isWin) {
+            if (isWinningCombination(spinResult)) {
                 double winnings = bet * 10;
-                currentMoney += winnings;
-                System.out.println("🎉 JACKPOT! You won $" + String.format("%.2f", winnings) + "!");
+                balance += winnings;
+                System.out.printf("🎉 You won! You earned $%.2f%n", winnings);
             } else {
-                currentMoney -= bet;
-                System.out.println("😢 You lost $" + String.format("%.2f", bet));
+                balance -= bet;
+                System.out.println("😢 You lost!");
             }
 
-            if (currentMoney <= 0) {
-                System.out.println("You're out of money! Game over.");
+            if (balance <= 0) {
+                System.out.println("You're out of money!");
+                break;
+            }
+
+            System.out.print("Do you want to play again? (yes/no): ");
+            scanner.nextLine(); // Consume newline
+            String answer = scanner.nextLine().trim().toLowerCase();
+            if (!answer.equals("yes")) {
                 break;
             }
         }
 
-        double netEarnings = currentMoney - startingMoney;
-        System.out.println("\nThank you for playing, " + playerName + "!");
-        System.out.println("Your final balance is $" + String.format("%.2f", currentMoney));
-        System.out.println("Net earnings: $" + String.format("%.2f", netEarnings));
+        double netEarnings = balance - startingBalance;
+        System.out.printf("Session ended. Net earnings: $%.2f%n", netEarnings);
     }
 
-    private double getValidBet() {
-        while (true) {
-            try {
-                System.out.print("You have $" + String.format("%.2f", currentMoney) + ". Enter your bet (or 0 to quit): $");
-                double bet = Double.parseDouble(scanner.nextLine());
-
-                if (bet == 0) {
-                    return 0;
-                }
-
-                if (bet > currentMoney || bet < 0) {
-                    System.out.println("Invalid bet. Must be between $0 and $" + String.format("%.2f", currentMoney));
-                } else {
-                    return bet;
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a numeric value.");
+    private String[] spinReels() {
+        String[] result = new String[3];
+        try {
+            for (int i = 0; i < 3; i++) {
+                Thread.sleep(1000); // Simulate spin delay
+                result[i] = emojis[rand.nextInt(emojis.length)];
+                System.out.print(result[i] + " ");
             }
+            System.out.println();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+
+        // 5% chance to override with a winning combo
+        if (rand.nextInt(100) < 5) {
+            String winEmoji = emojis[rand.nextInt(emojis.length)];
+            result[0] = result[1] = result[2] = winEmoji;
+        }
+
+        return result;
     }
 
-    private boolean isWinningCombo(String[] result) {
-        return result[0].equals(result[1]) && result[1].equals(result[2]);
+    private boolean isWinningCombination(String[] spin) {
+        return spin[0].equals(spin[1]) && spin[1].equals(spin[2]);
     }
 
     public static void main(String[] args) {
-        SlotMachine machine = new SlotMachine();
-        machine.play();
+        new SlotMachine();
     }
 }
